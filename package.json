@@ -1,0 +1,17 @@
+{
+  "name": "galata",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.gs",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "clasp push",
+    "dev": "clasp push -w",
+    "deploy": "clasp push && clasp deploy"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.78"
+  }
+}
