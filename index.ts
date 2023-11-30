@@ -12,7 +12,7 @@ function onOpen() {
     .addItem("Init Actions", "initActionsSheet");
 
   ui.createMenu("Galata")
-    .addItem("Update Inbox", "addInboxSheet")
+    .addItem("Update Inbox", "updateInboxSheet")
     .addSeparator()
     .addSubMenu(pivotMenu)
     .addSubMenu(advancedMenu)
@@ -21,9 +21,21 @@ function onOpen() {
 
 function onInstall() {
   onOpen();
-  addInboxSheet();
+  updateInboxSheet();
   initActionsSheet();
   addAllPivotSheets();
+  createTrigger();
+}
+
+function createTrigger() {
+  const existingTriggers = ScriptApp.getProjectTriggers();
+  for (let i = 0; i < existingTriggers.length; i++) {
+    if (existingTriggers[i].getHandlerFunction() === "updateInboxSheet") {
+      ScriptApp.deleteTrigger(existingTriggers[i]);
+    }
+  }
+
+  ScriptApp.newTrigger("updateInboxSheet").timeBased().everyHours(1).create();
 }
 
 function getCleanSheet(sheetName: string) {
@@ -75,13 +87,15 @@ function initActionsSheet() {
   sheet.getRange("C2:C").setDataValidation(actionValidationRule);
 }
 
-function addInboxSheet() {
+function updateInboxSheet() {
   const doc = SpreadsheetApp.getActive();
   const sheet = getCleanSheet(Sheet.INBOX);
   sheet.setFrozenRows(1);
   const threads = GmailApp.search("label:inbox");
   const messages = GmailApp.getMessagesForThreads(threads);
-  const data: any[] = [["Email", "Email Domain", "Date", "Subject", "Weekday", "Hour"]];
+  const data: any[] = [
+    ["Email", "Email Domain", "Date", "Subject", "Weekday", "Hour"],
+  ];
   const timeZone = doc.getSpreadsheetTimeZone();
 
   messages.forEach((thread) => {
