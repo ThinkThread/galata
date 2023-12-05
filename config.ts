@@ -1,4 +1,4 @@
-enum Sheet {
+enum EnumSheet {
   INBOX = "Inbox",
   ACTIONS = "Actions",
   EMAIL_PIVOT = "#Email",
@@ -6,7 +6,7 @@ enum Sheet {
   HOURS_PIVOT = "#Hours",
 }
 
-enum Weekday {
+enum EnumWeekday {
   MONDAY = "Mon",
   TUESDAY = "Tue",
   WEDNESDAY = "Wed",
@@ -17,38 +17,52 @@ enum Weekday {
 }
 
 const WEEKDAYS = [
-  Weekday.MONDAY,
-  Weekday.TUESDAY,
-  Weekday.WEDNESDAY,
-  Weekday.THURSDAY,
-  Weekday.FRIDAY,
-  Weekday.SATURDAY,
-  Weekday.SUNDAY,
+  EnumWeekday.MONDAY,
+  EnumWeekday.TUESDAY,
+  EnumWeekday.WEDNESDAY,
+  EnumWeekday.THURSDAY,
+  EnumWeekday.FRIDAY,
+  EnumWeekday.SATURDAY,
+  EnumWeekday.SUNDAY,
 ];
 
-enum Color {
+enum EnumColor {
   GREEN = "#34A853",
   RED = "#EA4335"
 }
 
-enum Action {
+enum EnumAction {
   ARCHIVE = "Archive",
   DELETE = "Delete",
   SPAM = "Spam",
 }
 
 const ACTIONS = [
-  Action.ARCHIVE,
-  Action.DELETE,
-  Action.SPAM,
+  EnumAction.ARCHIVE,
+  EnumAction.DELETE,
+  EnumAction.SPAM,
 ];
 
-enum TargetType {
+enum EnumTargetType {
   DOMAIN = "Domain",
   EMAIL = "Email",
 }
 
 const TARGET_TYPES = [
-  TargetType.DOMAIN,
-  TargetType.EMAIL,
+  EnumTargetType.DOMAIN,
+  EnumTargetType.EMAIL,
 ];
+
+const LAST_UPDATE_PROPERTY = "LAST_UPDATE";
+
+export {
+  EnumSheet,
+  EnumWeekday,
+  EnumColor,
+  EnumAction,
+  EnumTargetType,
+  ACTIONS,
+  LAST_UPDATE_PROPERTY,
+  TARGET_TYPES,
+  WEEKDAYS,
+};
