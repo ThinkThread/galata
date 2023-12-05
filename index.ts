@@ -91,21 +91,31 @@ function updateInboxSheet() {
   const doc = SpreadsheetApp.getActive();
   const sheet = getCleanSheet(Sheet.INBOX);
   sheet.setFrozenRows(1);
-  const threads = GmailApp.search("label:inbox");
-  const messages = GmailApp.getMessagesForThreads(threads);
   const data: any[] = [
     ["Email", "Email Domain", "Date", "Subject", "Weekday", "Hour"],
   ];
   const timeZone = doc.getSpreadsheetTimeZone();
 
-  messages.forEach((thread) => {
-    const message = thread[0];
-    const emailDetails = extractEmailDetails(message, timeZone);
-    data.push(emailDetails);
-  });
+  let start = 0;
+  const maxThreadsPerBatch = 100;
+  let threads;
+
+  do {
+    threads = GmailApp.search("label:inbox", start, maxThreadsPerBatch);
+
+    let messages = GmailApp.getMessagesForThreads(threads);
+
+    messages.forEach((thread) => {
+      thread.forEach((message) => {
+        const emailDetails = extractEmailDetails(message, timeZone);
+        data.push(emailDetails);
+      });
+    });
+
+    start += maxThreadsPerBatch;
+  } while (threads.length === maxThreadsPerBatch);
 
   sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
-
   const range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
   range.createFilter();
 }
