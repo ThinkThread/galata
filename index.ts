@@ -29,9 +29,9 @@ function onInstall() {
 
 function createTrigger() {
   const existingTriggers = ScriptApp.getProjectTriggers();
-  for (let i = 0; i < existingTriggers.length; i++) {
-    if (existingTriggers[i].getHandlerFunction() === "updateInboxSheet") {
-      ScriptApp.deleteTrigger(existingTriggers[i]);
+  for (const element of existingTriggers) {
+    if (element.getHandlerFunction() === "updateInboxSheet") {
+      ScriptApp.deleteTrigger(element);
     }
   }
 
