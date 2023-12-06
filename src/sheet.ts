@@ -26,7 +26,8 @@ function initInboxSheet() {
     "Weekday",
     "Hour",
   ];
-  const emailsData = getAllEmailsWithQuery("in:inbox", timeZone);
+  const emails = getAllEmailsWithQuery("in:inbox", timeZone);
+  const emailsData = emails.map((email) => extractEmailDetails(email, timeZone));
   const data = [dataHeader, ...emailsData];
 
   const sheet = getCleanSheet(EnumSheet.INBOX);
@@ -50,25 +51,25 @@ function updateInboxSheet() {
 
   const query = `in:inbox after:${lastUpdate}`;
   const existingEmailIds = getExistingEmailIds();
-  const allData = getAllEmailsWithQuery(query, timeZone);
-  if (allData.length === 0) {
+  const emails = getAllEmailsWithQuery(query, timeZone);
+  if (emails.length === 0) {
     return;
   }
 
-  const data = allData.filter((email) => !existingEmailIds.includes(email[0]));
-  if (data.length === 0) {
+  const newEmails = emails.filter((email) => !existingEmailIds.includes(email.getId()));
+  if (newEmails.length === 0) {
     return;
   }
 
-  const sheet = getInboxSheet();
+  const emailsData = newEmails.map((email) => extractEmailDetails(email, timeZone));
+
+  const sheet = getSheet(EnumSheet.INBOX);
   const numRows = sheet.getLastRow();
-  sheet.getRange(numRows + 1, 1, data.length, data[0].length).setValues(data);
+  sheet
+    .getRange(numRows + 1, 1, emailsData.length, emailsData[0].length)
+    .setValues(emailsData);
 
   setLastUpdate(timeZone);
-}
-
-function getInboxSheet() {
-  return getSheet(EnumSheet.INBOX);
 }
 
 function initActionsSheet() {
@@ -94,13 +95,9 @@ function initActionsSheet() {
   sheet.getRange("C2:C").setDataValidation(actionValidationRule);
 }
 
-function getActionsSheet() {
-  return getSheet(EnumSheet.ACTIONS);
-}
-
 function executeActions() {
-  const actionsSheet = getActionsSheet();
-  const inboxSheet = getInboxSheet();
+  const actionsSheet = getSheet(EnumSheet.ACTIONS);
+  const inboxSheet = getSheet(EnumSheet.INBOX);
   const actionData = actionsSheet.getDataRange().getValues();
   const inboxData = inboxSheet.getDataRange().getValues();
 
@@ -165,7 +162,7 @@ function addAllPivotSheets() {
 }
 
 function addEmailPivotSheet() {
-  const sheet = getInboxSheet();
+  const sheet = getSheet(EnumSheet.INBOX);
   const pivotSheet = getCleanSheet(EnumSheet.EMAIL_PIVOT);
   pivotSheet.setFrozenRows(1);
 
@@ -188,7 +185,7 @@ function addEmailPivotSheet() {
 }
 
 function addDomainPivotSheet() {
-  const sheet = getInboxSheet();
+  const sheet = getSheet(EnumSheet.INBOX);
   const pivotSheet = getCleanSheet(EnumSheet.DOMAIN_PIVOT);
   pivotSheet.setFrozenRows(1);
 
@@ -267,17 +264,34 @@ function getCleanSheet(name: string) {
 }
 
 function getExistingEmailIds() {
-  const sheet = getInboxSheet();
+  const sheet = getSheet(EnumSheet.INBOX);
   const numRows = sheet.getLastRow();
   const emailIds = sheet.getRange(2, 1, numRows - 1, 1).getValues();
   return emailIds.flat();
 }
 
 function getInboxValues() {
-  const sheet = getInboxSheet();
+  const sheet = getSheet(EnumSheet.INBOX);
   const numRows = sheet.getLastRow();
   const data = sheet.getRange(2, 1, numRows - 1, 7).getValues();
   return data;
+}
+
+function extractEmailDetails(
+  message: GoogleAppsScript.Gmail.GmailMessage,
+  timeZone: string
+) {
+  const threadId = message.getThread().getId();
+  const mailId = message.getId();
+  const sender = message.getFrom();
+  const match = sender.match(/<([^>]+)>/);
+  const email = match ? match[1] : sender.replace(/[\s"]/g, "");
+  const domain = email.substring(email.indexOf("@") + 1);
+  const date = message.getDate();
+  const subject = message.getSubject();
+  const weekday = Utilities.formatDate(date, timeZone, "EEE");
+  const hour = Utilities.formatDate(date, timeZone, "H");
+  return [threadId, mailId, email, domain, date, subject, weekday, hour];
 }
 
 export {
