@@ -2,7 +2,7 @@
   "name": "galata",
   "version": "0.0.1",
   "description": "",
-  "main": "index.gs",
+  "main": "src/app",
   "author": "",
   "license": "ISC",
   "scripts": {

@@ -1,75 +1,7 @@
-import {
-  ACTIONS,
-  EnumAction,
-  EnumColor,
-  EnumSheet,
-  EnumTargetType,
-  TARGET_TYPES,
-  WEEKDAYS,
-  LAST_UPDATE_PROPERTY,
-} from "./config";
-
-function onOpen() {
-  const ui = SpreadsheetApp.getUi();
-
-  const pivotMenu = ui
-    .createMenu("Pivots")
-    .addItem("ALL", "addAllPivotSheets")
-    .addSeparator()
-    .addItem("Email Count", "addEmailPivotSheet")
-    .addItem("Domain Count", "addDomainPivotSheet")
-    .addItem("Busiest Hours", "addBusiestHoursPivotSheet");
-
-  const advancedMenu = ui
-    .createMenu("Advanced")
-    .addItem("Init Inbox", "initInboxSheet")
-    .addItem("Init Actions", "initActionsSheet")
-    .addItem("Init Triggers", "initTrigger");
-
-  ui.createMenu("Galata")
-    .addItem("Update Inbox", "updateInboxSheet")
-    .addItem("Execute Actions", "executeActions")
-    .addSeparator()
-    .addSubMenu(pivotMenu)
-    .addSubMenu(advancedMenu)
-    .addToUi();
-}
-
-function onInstall() {
-  onOpen();
-  initInboxSheet();
-  initActionsSheet();
-  addAllPivotSheets();
-  initTrigger();
-}
-
-function initTrigger() {
-  const existingTriggers = ScriptApp.getProjectTriggers();
-  for (const element of existingTriggers) {
-    ScriptApp.deleteTrigger(element);
-  }
-
-  ScriptApp.newTrigger("initInboxSheet").timeBased().everyDays(1).create();
-  ScriptApp.newTrigger("updateInboxSheet").timeBased().everyHours(1).create();
-  ScriptApp.newTrigger("executeActions").timeBased().everyHours(1).create();
-}
-
-function getCleanSheet(name: string) {
-  const doc = SpreadsheetApp.getActive();
-
-  const sheet = doc.getSheetByName(name);
-  if (sheet == null) {
-    return doc.insertSheet(name);
-  }
-
-  const filter = sheet.getFilter();
-  if (filter != null) {
-    filter.remove();
-  }
-
-  sheet.clear();
-  return sheet;
-}
+import { ACTIONS, TARGET_TYPES, WEEKDAYS } from "./constants";
+import { EnumAction, EnumColor, EnumSheet, EnumTargetType } from "./enums";
+import { getAllEmailsWithQuery } from "./gmail";
+import { getLastUpdate, setLastUpdate } from "./props";
 
 function getSheet(name: string) {
   const doc = SpreadsheetApp.getActive();
@@ -78,62 +10,6 @@ function getSheet(name: string) {
     throw new Error(`${name} sheet not found`);
   }
   return sheet;
-}
-
-function getInboxSheet() {
-  return getSheet(EnumSheet.INBOX);
-}
-
-function getActionsSheet() {
-  return getSheet(EnumSheet.ACTIONS);
-}
-
-function initActionsSheet() {
-  const sheet = getCleanSheet(EnumSheet.ACTIONS);
-  sheet.setFrozenRows(1);
-
-  const data: any[] = [
-    ["Target", "Type", "Action"],
-    ["email.com", "Domain", "Archive"],
-    ["admin@email.com", "Email", "Delete"],
-  ];
-
-  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
-
-  const typeValidationRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(TARGET_TYPES, true)
-    .build();
-  sheet.getRange("B2:B").setDataValidation(typeValidationRule);
-
-  const actionValidationRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(ACTIONS, true)
-    .build();
-  sheet.getRange("C2:C").setDataValidation(actionValidationRule);
-}
-
-function getAllEmailsWithQuery(query: string, timeZone: string) {
-  const data: any[] = [];
-
-  let start = 0;
-  const maxThreadsPerBatch = 100;
-  let threads;
-
-  do {
-    threads = GmailApp.search(query, start, maxThreadsPerBatch);
-
-    let messages = GmailApp.getMessagesForThreads(threads);
-
-    messages.forEach((thread) => {
-      thread.forEach((message) => {
-        const emailDetails = extractEmailDetails(message, timeZone);
-        data.push(emailDetails);
-      });
-    });
-
-    start += maxThreadsPerBatch;
-  } while (threads.length === maxThreadsPerBatch);
-
-  return data;
 }
 
 function initInboxSheet() {
@@ -189,6 +65,37 @@ function updateInboxSheet() {
   sheet.getRange(numRows + 1, 1, data.length, data[0].length).setValues(data);
 
   setLastUpdate(timeZone);
+}
+
+function getInboxSheet() {
+  return getSheet(EnumSheet.INBOX);
+}
+
+function initActionsSheet() {
+  const sheet = getCleanSheet(EnumSheet.ACTIONS);
+  sheet.setFrozenRows(1);
+
+  const data: any[] = [
+    ["Target", "Type", "Action"],
+    ["email.com", "Domain", "Archive"],
+    ["admin@email.com", "Email", "Delete"],
+  ];
+
+  sheet.getRange(1, 1, data.length, data[0].length).setValues(data);
+
+  const typeValidationRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(TARGET_TYPES, true)
+    .build();
+  sheet.getRange("B2:B").setDataValidation(typeValidationRule);
+
+  const actionValidationRule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(ACTIONS, true)
+    .build();
+  sheet.getRange("C2:C").setDataValidation(actionValidationRule);
+}
+
+function getActionsSheet() {
+  return getSheet(EnumSheet.ACTIONS);
 }
 
 function executeActions() {
@@ -249,37 +156,6 @@ function executeActions() {
   for (const rowIndex of rowsToDelete) {
     inboxSheet.deleteRow(rowIndex);
   }
-}
-
-function getExistingEmailIds() {
-  const sheet = getInboxSheet();
-  const numRows = sheet.getLastRow();
-  const emailIds = sheet.getRange(2, 1, numRows - 1, 1).getValues();
-  return emailIds.flat();
-}
-
-function getInboxValues() {
-  const sheet = getInboxSheet();
-  const numRows = sheet.getLastRow();
-  const data = sheet.getRange(2, 1, numRows - 1, 7).getValues();
-  return data;
-}
-
-function extractEmailDetails(
-  message: GoogleAppsScript.Gmail.GmailMessage,
-  timeZone: string
-) {
-  const threadId = message.getThread().getId();
-  const mailId = message.getId();
-  const sender = message.getFrom();
-  const match = sender.match(/<([^>]+)>/);
-  const email = match ? match[1] : sender.replace(/[\s"]/g, "");
-  const domain = email.substring(email.indexOf("@") + 1);
-  const date = message.getDate();
-  const subject = message.getSubject();
-  const weekday = Utilities.formatDate(date, timeZone, "EEE");
-  const hour = Utilities.formatDate(date, timeZone, "H");
-  return [threadId, mailId, email, domain, date, subject, weekday, hour];
 }
 
 function addAllPivotSheets() {
@@ -373,13 +249,41 @@ function addBusiestHoursPivotSheet() {
   pivotSheet.setConditionalFormatRules(rules);
 }
 
-function setLastUpdate(timeZone: string) {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  const lastUpdate = Utilities.formatDate(new Date(), timeZone, "yyyy/MM/dd");
-  scriptProperties.setProperty(LAST_UPDATE_PROPERTY, lastUpdate);
+function getCleanSheet(name: string) {
+  const doc = SpreadsheetApp.getActive();
+
+  const sheet = doc.getSheetByName(name);
+  if (sheet == null) {
+    return doc.insertSheet(name);
+  }
+
+  const filter = sheet.getFilter();
+  if (filter != null) {
+    filter.remove();
+  }
+
+  sheet.clear();
+  return sheet;
 }
 
-function getLastUpdate(): string | null {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  return scriptProperties.getProperty(LAST_UPDATE_PROPERTY);
+function getExistingEmailIds() {
+  const sheet = getInboxSheet();
+  const numRows = sheet.getLastRow();
+  const emailIds = sheet.getRange(2, 1, numRows - 1, 1).getValues();
+  return emailIds.flat();
 }
+
+function getInboxValues() {
+  const sheet = getInboxSheet();
+  const numRows = sheet.getLastRow();
+  const data = sheet.getRange(2, 1, numRows - 1, 7).getValues();
+  return data;
+}
+
+export {
+  initInboxSheet,
+  updateInboxSheet,
+  initActionsSheet,
+  executeActions,
+  addAllPivotSheets,
+};
