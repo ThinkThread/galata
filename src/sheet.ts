@@ -95,6 +95,31 @@ function initActionsSheet() {
   sheet.getRange("C2:C").setDataValidation(actionValidationRule);
 }
 
+function initLogSheet() {
+  const sheet = getCleanSheet(EnumSheet.LOG);
+  sheet.setFrozenRows(1);
+
+  const dataHeader = [
+    "Action Date",
+    "Action Target",
+    "Action Type",
+    "Action",
+    "Thread Id",
+    "Mail Id",
+    "Email",
+    "Email Domain",
+    "Date",
+    "Subject",
+    "Weekday",
+    "Hour",
+  ];
+  const data: any[] = [dataHeader];
+
+  sheet.getRange(1, 1, data.length, dataHeader.length).setValues(data);
+  const range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
+  range.createFilter();
+}
+
 function executeActions() {
   const actionsSheet = getSheet(EnumSheet.ACTIONS);
   const inboxSheet = getSheet(EnumSheet.INBOX);
@@ -107,6 +132,7 @@ function executeActions() {
 
   const inbox = getInboxValues();
   const threadsForAction = new Map<string, string>();
+  const rowsToLog: any[] = [];
 
   for (const row of actionData) {
     const target = row[0];
@@ -114,17 +140,29 @@ function executeActions() {
     const action = row[2];
 
     if (type === EnumTargetType.DOMAIN) {
-      const domainThreadIds = inbox
-        .filter((mail) => mail[3] === target)
-        .map((mail) => mail[0]);
-      domainThreadIds.forEach((emailId) =>
-        threadsForAction.set(emailId, action)
-      );
+      const domainThreads = inbox.filter((mail) => mail[3] === target);
+      domainThreads.forEach((thread) => {
+        threadsForAction.set(thread[0], action);
+        rowsToLog.push([
+          new Date(),
+          target,
+          type,
+          action,
+          ...thread,
+        ]);
+      });
     } else if (type === EnumTargetType.EMAIL) {
-      const threadIds = inbox
-        .filter((mail) => mail[2] === target)
-        .map((mail) => mail[0]);
-      threadIds.forEach((threadId) => threadsForAction.set(threadId, action));
+      const threads = inbox.filter((mail) => mail[2] === target);
+      threads.forEach((thread) => {
+        threadsForAction.set(thread[0], action);
+        rowsToLog.push([
+          new Date(),
+          target,
+          type,
+          action,
+          ...thread,
+        ]);
+      });
     }
   }
 
@@ -153,6 +191,12 @@ function executeActions() {
   for (const rowIndex of rowsToDelete) {
     inboxSheet.deleteRow(rowIndex);
   }
+
+  const logSheet = getSheet(EnumSheet.LOG);
+  const numRows = logSheet.getLastRow();
+  logSheet
+    .getRange(numRows + 1, 1, rowsToLog.length, rowsToLog[0].length)
+    .setValues(rowsToLog);
 }
 
 function addAllPivotSheets() {
@@ -273,7 +317,7 @@ function getExistingEmailIds() {
 function getInboxValues() {
   const sheet = getSheet(EnumSheet.INBOX);
   const numRows = sheet.getLastRow();
-  const data = sheet.getRange(2, 1, numRows - 1, 7).getValues();
+  const data = sheet.getRange(2, 1, numRows - 1, 8).getValues();
   return data;
 }
 
@@ -298,6 +342,7 @@ export {
   initInboxSheet,
   updateInboxSheet,
   initActionsSheet,
+  initLogSheet,
   executeActions,
   addAllPivotSheets,
 };

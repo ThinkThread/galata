@@ -12,6 +12,7 @@ enum EnumColor {
 enum EnumSheet {
   INBOX = "Inbox",
   ACTIONS = "Actions",
+  LOG = "Log",
   EMAIL_PIVOT = "#Email",
   DOMAIN_PIVOT = "#Domain",
   HOURS_PIVOT = "#Hours",

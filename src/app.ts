@@ -1,4 +1,4 @@
-import { addAllPivotSheets, initActionsSheet, initInboxSheet } from "./sheet";
+import { addAllPivotSheets, initActionsSheet, initInboxSheet, initLogSheet } from "./sheet";
 
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
@@ -15,6 +15,7 @@ function onOpen() {
     .createMenu("Advanced")
     .addItem("Init Inbox", "initInboxSheet")
     .addItem("Init Actions", "initActionsSheet")
+    .addItem("Init Log", "initLogSheet")
     .addItem("Init Triggers", "initTrigger");
 
   ui.createMenu("Galata")
@@ -29,6 +30,7 @@ function onOpen() {
 function onInstall() {
   initInboxSheet();
   initActionsSheet();
+  initLogSheet();
   addAllPivotSheets();
   initTrigger();
 }

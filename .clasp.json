@@ -1,4 +1,13 @@
 {
   "scriptId": "1KvuZaZe1NmDg7iB0hhG6gKTUO1bHsaA3fRKGsCUX9sh-Y1frWd6fp-hO",
-  "projectId": "galata-mail"
+  "projectId": "galata-mail",
+  "filePushOrder": [
+    "appsscript.json",
+    "src/enums.ts",
+    "src/constants.ts",
+    "src/gmail.ts",
+    "src/props.ts",
+    "src/sheet.ts",
+    "src/app.ts"
+  ]
 }
