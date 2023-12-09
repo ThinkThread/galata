@@ -187,11 +187,13 @@ function executeActions() {
     inboxSheet.deleteRow(rowIndex);
   }
 
-  const logSheet = getSheet(EnumSheet.LOG);
-  const numRows = logSheet.getLastRow();
-  logSheet
-    .getRange(numRows + 1, 1, rowsToLog.length, rowsToLog[0].length)
-    .setValues(rowsToLog);
+  if (rowsToLog.length > 0) {
+    const logSheet = getSheet(EnumSheet.LOG);
+    const numRows = logSheet.getLastRow();
+    logSheet
+      .getRange(numRows + 1, 1, rowsToLog.length, rowsToLog[0].length)
+      .setValues(rowsToLog);
+  }
 }
 
 function addAllPivotSheets() {
