@@ -1,5 +1,3 @@
-import { addAllPivotSheets, initActionsSheet, initInboxSheet, initLogSheet } from "./sheet";
-
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
 

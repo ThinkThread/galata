@@ -1,8 +1,3 @@
-import { ACTIONS, TARGET_TYPES, WEEKDAYS } from "./constants";
-import { EnumAction, EnumColor, EnumSheet, EnumTargetType } from "./enums";
-import { getAllEmailsWithQuery } from "./gmail";
-import { getLastUpdate, setLastUpdate } from "./props";
-
 function getSheet(name: string) {
   const doc = SpreadsheetApp.getActive();
   const sheet = doc.getSheetByName(name);
@@ -337,12 +332,3 @@ function extractEmailDetails(
   const hour = Utilities.formatDate(date, timeZone, "H");
   return [threadId, mailId, email, domain, date, subject, weekday, hour];
 }
-
-export {
-  initInboxSheet,
-  updateInboxSheet,
-  initActionsSheet,
-  initLogSheet,
-  executeActions,
-  addAllPivotSheets,
-};

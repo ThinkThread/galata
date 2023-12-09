@@ -32,5 +32,3 @@ enum EnumWeekday {
   SATURDAY = "Sat",
   SUNDAY = "Sun",
 }
-
-export { EnumAction, EnumColor, EnumSheet, EnumTargetType, EnumWeekday };

@@ -21,5 +21,3 @@ function getAllEmailsWithQuery(query: string, timeZone: string) {
 
   return data;
 }
-
-export { getAllEmailsWithQuery };
