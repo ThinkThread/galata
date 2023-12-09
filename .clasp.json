@@ -5,6 +5,7 @@
     "appsscript.json",
     "src/enums.ts",
     "src/constants.ts",
+    "src/dto.ts",
     "src/gmail.ts",
     "src/props.ts",
     "src/sheet.ts",

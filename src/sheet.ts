@@ -105,8 +105,6 @@ function initLogSheet() {
     "Email Domain",
     "Date",
     "Subject",
-    "Weekday",
-    "Hour",
   ];
   const data: any[] = [dataHeader];
 
@@ -135,27 +133,37 @@ function executeActions() {
     const action = row[2];
 
     if (type === EnumTargetType.DOMAIN) {
-      const domainThreads = inbox.filter((mail) => mail[3] === target);
+      const domainThreads = inbox.filter((mail) => mail.emailDomain === target);
       domainThreads.forEach((thread) => {
-        threadsForAction.set(thread[0], action);
+        threadsForAction.set(thread.threadId, action);
         rowsToLog.push([
           new Date(),
           target,
           type,
           action,
-          ...thread,
+          thread.threadId,
+          thread.mailId,
+          thread.email,
+          thread.emailDomain,
+          thread.date,
+          thread.subject,
         ]);
       });
     } else if (type === EnumTargetType.EMAIL) {
-      const threads = inbox.filter((mail) => mail[2] === target);
+      const threads = inbox.filter((mail) => mail.email === target);
       threads.forEach((thread) => {
-        threadsForAction.set(thread[0], action);
+        threadsForAction.set(thread.threadId, action);
         rowsToLog.push([
           new Date(),
           target,
           type,
           action,
-          ...thread,
+          thread.threadId,
+          thread.mailId,
+          thread.email,
+          thread.emailDomain,
+          thread.date,
+          thread.subject,
         ]);
       });
     }
@@ -311,11 +319,20 @@ function getExistingEmailIds() {
   return emailIds.flat();
 }
 
-function getInboxValues() {
+function getInboxValues(): IInboxRow[] {
   const sheet = getSheet(EnumSheet.INBOX);
   const numRows = sheet.getLastRow();
   const data = sheet.getRange(2, 1, numRows - 1, 8).getValues();
-  return data;
+  return data.map((row) => ({
+    threadId: row[0],
+    mailId: row[1],
+    email: row[2],
+    emailDomain: row[3],
+    date: row[4],
+    subject: row[5],
+    weekday: row[6],
+    hour: row[7],
+  }));
 }
 
 function extractEmailDetails(
