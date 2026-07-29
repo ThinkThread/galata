@@ -18,6 +18,17 @@ enum EnumSheet {
   HOURS_PIVOT = "#Hours",
 }
 
+enum EnumInboxColumn {
+  THREAD_ID = 0,
+  MAIL_ID = 1,
+  EMAIL = 2,
+  EMAIL_DOMAIN = 3,
+  DATE = 4,
+  SUBJECT = 5,
+  WEEKDAY = 6,
+  HOUR = 7,
+}
+
 enum EnumTargetType {
   DOMAIN = "Domain",
   EMAIL = "Email",
